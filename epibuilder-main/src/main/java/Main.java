@@ -1,11 +1,4 @@
 
-import br.ufsc.epibuilder.EpitopeFinder;
-import br.ufsc.epibuilder.Parameters;
-import br.ufsc.epibuilder.entity.Proteome;
-import br.ufsc.epibuilder.entity.SoftwareBcellEnum;
-import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,70 +9,93 @@ import java.util.concurrent.Callable;
 
 import org.apache.commons.lang3.StringUtils;
 
-@Command(name = "EpiBuilder-2.0", requiredOptionMarker = '*', abbreviateSynopsis = true,
-        description = "A Tool for Assembling, Searching, and Classifying B-Cell Epitopes", version = "2.0", sortOptions = false)
+import br.ufsc.epibuilder.EpitopeFinder;
+import br.ufsc.epibuilder.Parameters;
+import br.ufsc.epibuilder.entity.Proteome;
+import br.ufsc.epibuilder.entity.SoftwareBcellEnum;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+
+@Command(name = "EpiBuilder-2.0", requiredOptionMarker = '*', abbreviateSynopsis = true, description = "A Tool for Assembling, Searching, and Classifying B-Cell Epitopes", version = "2.0", sortOptions = false)
 public class Main implements Callable<Integer> {
 
-
-    @Option(names = {"-i", "--input"}, required = true, description = "Input file")
+    @Option(names = { "-i", "--input" }, required = true, description = "Input file")
     File input;
-    @Option(names = {"-f", "--format"}, required = true, description = "Input file type: ${COMPLETION-CANDIDATES} \ncsv - BepiPred-3.0 generated file (default)" +
-            "\nfasta - FASTA file, use this option only in Epibuilder customized Docker", defaultValue="csv")
+    @Option(names = { "-f",
+            "--format" }, required = true, description = "Input file type: ${COMPLETION-CANDIDATES} \ncsv - BepiPred-3.0 generated file (default)"
+                    +
+                    "\nfasta - FASTA file, use this option only in Epibuilder customized Docker", defaultValue = "csv")
     FileType type;
-    @Option(names = {"-min", "--min-length"}, description = "Minimum epitope length. Default: ${DEFAULT-VALUE}", defaultValue = "10")
+    @Option(names = { "-min",
+            "--min-length" }, description = "Minimum epitope length. Default: ${DEFAULT-VALUE}", defaultValue = "10")
     Integer minLength;
-    @Option(names = {"-max", "--max-length"}, description = "Max epitope length. Default: ${DEFAULT-VALUE}", defaultValue = "30")
+    @Option(names = { "-max",
+            "--max-length" }, description = "Max epitope length. Default: ${DEFAULT-VALUE}", defaultValue = "30")
     Integer maxLength;
-    @Option(names = {"-t", "--threshold"}, description = "Threshold default: ${DEFAULT-VALUE}", defaultValue = "0.1512")
+    @Option(names = { "-t",
+            "--threshold" }, description = "Threshold default: ${DEFAULT-VALUE}", defaultValue = "0.1512")
     Double threshold;
 
-    @Option(names = {"-o", "--output"}, description = "The common base name for the output generated files. Default: ${DEFAULT-VALUE}", defaultValue = "epibuilder-results")
+    @Option(names = { "-o",
+            "--output" }, description = "The common base name for the output generated files. Default: ${DEFAULT-VALUE}", defaultValue = "epibuilder-results")
     String basename;
-    @Option(names = {"-search", "--search"}, description = "Method of search in the given proteome(s): ${COMPLETION-CANDIDATES}. " +
-            "\nblast - perform search with blast (at least one proteome is mandatory, use option -p1 to p6 or -proteomes to set them)" +
-            "\nnone - don't search (default)", defaultValue = "none")
+    @Option(names = { "-search",
+            "--search" }, description = "Method of search in the given proteome(s): ${COMPLETION-CANDIDATES}. " +
+                    "\nblast - perform search with blast (at least one proteome is mandatory, use option -p1 to p6 or -proteomes to set them)"
+                    +
+                    "\nnone - don't search (default)", defaultValue = "none")
     Search search;
-    @Option(names = {"-bi", "--ident"}, description = "Minimum identity cutoff. Default: ${DEFAULT-VALUE}", defaultValue = "90")
+    @Option(names = { "-bi",
+            "--ident" }, description = "Minimum identity cutoff. Default: ${DEFAULT-VALUE}", defaultValue = "90")
     Integer blastIdentity;
-    @Option(names = {"-bc", "--cover"}, description = "Minimum cover cutoff. Default: ${DEFAULT-VALUE}", defaultValue = "90")
+    @Option(names = { "-bc",
+            "--cover" }, description = "Minimum cover cutoff. Default: ${DEFAULT-VALUE}", defaultValue = "90")
     Integer blastCover;
-    @Option(names = {"-ws", "--word-size"}, description = "Word-size. Default: ${DEFAULT-VALUE}", defaultValue = "4")
+    @Option(names = { "-ws", "--word-size" }, description = "Word-size. Default: ${DEFAULT-VALUE}", defaultValue = "4")
     Integer blastWordsize;
-    @Option(names = {"-p1", "--proteome1"}, description = "Proteome 1 file", defaultValue = "null")
+    @Option(names = { "-p1", "--proteome1" }, description = "Proteome 1 file", defaultValue = "null")
     String proteome1;
-    @Option(names = {"-p1a", "--proteome1-alias"}, description = "Proteome 1 alias - appears in the report file", defaultValue = "proteome1")
+    @Option(names = { "-p1a",
+            "--proteome1-alias" }, description = "Proteome 1 alias - appears in the report file", defaultValue = "proteome1")
     String proteome1Alias;
-    @Option(names = {"-p2", "--proteome2"}, description = "Proteome 2 file", defaultValue = "null")
+    @Option(names = { "-p2", "--proteome2" }, description = "Proteome 2 file", defaultValue = "null")
     String proteome2;
-    @Option(names = {"-p2a", "--proteome2-alias"}, description = "Proteome 2 alias - appears in the report file", defaultValue = "proteome2")
+    @Option(names = { "-p2a",
+            "--proteome2-alias" }, description = "Proteome 2 alias - appears in the report file", defaultValue = "proteome2")
     String proteome2Alias;
-    @Option(names = {"-p3", "--proteome3"}, description = "Proteome 3 file", defaultValue = "null")
+    @Option(names = { "-p3", "--proteome3" }, description = "Proteome 3 file", defaultValue = "null")
     String proteome3;
-    @Option(names = {"-p3a", "--proteome3-alias"}, description = "Proteome 3 alias - appears in the report file", defaultValue = "proteome3")
+    @Option(names = { "-p3a",
+            "--proteome3-alias" }, description = "Proteome 3 alias - appears in the report file", defaultValue = "proteome3")
     String proteome3Alias;
-    @Option(names = {"-p4", "--proteome4"}, description = "Proteome 4 file", defaultValue = "null")
+    @Option(names = { "-p4", "--proteome4" }, description = "Proteome 4 file", defaultValue = "null")
     String proteome4;
-    @Option(names = {"-p4a", "--proteome4-alias"}, description = "Proteome 4 alias - appears in the report file", defaultValue = "proteome4")
+    @Option(names = { "-p4a",
+            "--proteome4-alias" }, description = "Proteome 4 alias - appears in the report file", defaultValue = "proteome4")
     String proteome4Alias;
-    @Option(names = {"-p5", "--proteome5"}, description = "Proteome 5 file", defaultValue = "null")
+    @Option(names = { "-p5", "--proteome5" }, description = "Proteome 5 file", defaultValue = "null")
     String proteome5;
-    @Option(names = {"-p5a", "--proteome5-alias"}, description = "Proteome 5 alias - appears in the report file", defaultValue = "proteome5")
+    @Option(names = { "-p5a",
+            "--proteome5-alias" }, description = "Proteome 5 alias - appears in the report file", defaultValue = "proteome5")
     String proteome5Alias;
-    @Option(names = {"-p6", "--proteome6"}, description = "Proteome 6 file", defaultValue = "null")
+    @Option(names = { "-p6", "--proteome6" }, description = "Proteome 6 file", defaultValue = "null")
     String proteome6;
-    @Option(names = {"-p6a", "--proteome6-alias"}, description = "Proteome 6 alias - appears in the report file", defaultValue = "proteome6")
+    @Option(names = { "-p6a",
+            "--proteome6-alias" }, description = "Proteome 6 alias - appears in the report file", defaultValue = "proteome6")
     String proteome6Alias;
 
-    @Option(names = {"-proteomes","--proteomes"}, required = false, description = "Input proteome files format (separated by ;) <alias1>=<fasta1>;<alias2>=<fasta2>\nUse this option to search in one or more proteomes. This option can be used with the p1-p6 option.")
+    @Option(names = { "-proteomes",
+            "--proteomes" }, required = false, description = "Input proteome files format (separated by :) <alias1>=<fasta1>;<alias2>=<fasta2>\nUse this option to search in one or more proteomes. This option can be used with the p1-p6 option.")
     String proteomes;
 
     @Override
     public Integer call() throws IOException {
         Parameters.FASTA = input;
         Parameters.BEPIPRED_FILE = input;
-        if(type == FileType.fasta) {
+        if (type == FileType.fasta) {
             Parameters.BEPIPRED_INPUT = Parameters.BEPIPRED_TYPE.FASTA;
-        }else{
+        } else {
             Parameters.BEPIPRED_INPUT = Parameters.BEPIPRED_TYPE.CSV;
         }
 
@@ -97,7 +113,7 @@ public class Main implements Callable<Integer> {
         Path p1 = Paths.get(Parameters.BASENAME);
         Files.createDirectories(p1);
 
-        Parameters.BASENAME += "/"+Parameters.BASENAME;
+        Parameters.BASENAME += "/" + Parameters.BASENAME;
 
         if (search != Search.none) {
             if (search == Search.blast) {
@@ -117,7 +133,8 @@ public class Main implements Callable<Integer> {
             int totalProt = proteomeFiles.size();
 
             if (!StringUtils.isBlank(proteomes)) {
-                String[] proteomas = proteomes.split(";");
+                String[] proteomas = proteomes.split(":");
+                System.out.println(proteomes.toString());
                 for (String proteoma : proteomas) {
                     proteoma = proteoma.trim();
                     String[] st = proteoma.split("=");
