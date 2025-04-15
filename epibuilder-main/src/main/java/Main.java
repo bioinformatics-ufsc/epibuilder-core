@@ -86,7 +86,7 @@ public class Main implements Callable<Integer> {
     String proteome6Alias;
 
     @Option(names = { "-proteomes",
-            "--proteomes" }, required = false, description = "Input proteome files format (separated by :) <alias1>=<fasta1>;<alias2>=<fasta2>\nUse this option to search in one or more proteomes. This option can be used with the p1-p6 option.")
+            "--proteomes" }, required = false, description = "Input proteome files format (separated by :) <alias1>=<fasta1>:<alias2>=<fasta2>\nUse this option to search in one or more proteomes. This option can be used with the p1-p6 option.")
     String proteomes;
 
     @Override
